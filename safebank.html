@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Skills Learning Hub - Senior Edition</title>
+    <style>
+        /* --- 1. ACCESSIBILITY & CORE THEME --- */
+        :root {
+            --bg-color: #fdfdfd;
+            --text-main: #222;
+            --text-muted: #555;
+            
+            /* High Contrast Action Colors */
+            --action-blue: #0044cc;
+            --action-green: #006400;
+            --action-teal: #005c5c;
+            --alert-red: #d32f2f;
+            --warm-yellow: #ffecb3;
+
+            /* "The Guide" Panel Colors */
+            --guide-bg: #e8f0fe;
+            --guide-border: #b3d1ff;
+            --guide-text: #0d47a1;
+        }
+
+        body {
+            font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            font-size: 20px; /* Large base font */
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- 2. LAYOUT: Split Screen (App vs Guide) --- */
+        #main-wrapper {
+            display: flex;
+            width: 100%;
+            flex-direction: row;
+        }
+
+        /* The App Simulation Area */
+        #app-container {
+            flex: 2;
+            padding: 20px;
+            max-width: 900px;
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            min-height: 100vh;
+        }
+
+        /* The Learning Guide Sidebar */
+        #guide-panel {
+            flex: 1;
+            background-color: var(--guide-bg);
+            border-left: 2px solid var(--guide-border);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Responsive: Stack on tablets/phones */
+        @media (max-width: 900px) {
+            #main-wrapper { flex-direction: column-reverse; }
+            #guide-panel { border-left: none; border-bottom: 2px solid var(--guide-border); }
+        }
+
+        h1, h2, h3 { margin-top: 0; }
+        
+        button {
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        
+        button:focus, input:focus, select:focus {
+            outline: 4px solid #ffcc00; /* High visibility focus */
+            outline-offset: 2px;
+        }
+
+        /* --- 3. UTILITY CLASSES --- */
+        .hidden { display: none !important; }
+        
+        .card {
+            border: 2px solid #ccc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+
+        .btn-large {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .input-large {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            border: 2px solid #555;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+
+        /* --- 4. GUIDE PANEL STYLES --- */
+        .guide-box {
+            background: white;
+            border: 2px solid var(--guide-border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .guide-icon { font-size: 40px; display: block; margin-bottom: 10px; }
+        .guide-title { font-weight: bold; color: var(--guide-text); font-size: 22px; display: block; margin-bottom: 10px;}
+
+        /* --- 5. SETUP & PORTAL --- */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media(max-width: 600px) { .portal-grid { grid-template-columns: 1fr; } }
+
+        .app-launcher {
+            text-align: center;
+            padding: 30px;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+        }
+        .app-launcher:hover { transform: translateY(-3px); border-color: #888; }
+
+        /* --- 6. BANKING APP STYLES --- */
+        .bank-theme { --primary: #003366; --light: #e6f0ff; }
+        .bank-header { background: var(--primary); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+        .bank-nav { background: #eee; padding: 10px; display: flex; gap: 10px; overflow-x: auto; }
+        .bank-nav button { flex: 1; padding: 10px; border: none; background: #ddd; font-weight: bold; min-width: 100px;}
+        .bank-nav button.active { background: white; color: var(--primary); border-top: 3px solid var(--primary); }
+        
+        .acct-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 15px 0; }
+        .amount-pos { color: var(--action-green); font-weight: bold; }
+        .amount-neg { color: var(--alert-red); font-weight: bold; }
+
+        /* --- 7. GP APP STYLES --- */
+        .gp-theme { --primary: #005c5c; --light: #e0f2f1; }
+        .gp-header { background: var(--primary); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+        
+        .option-card-group { display: flex; flex-direction: column; gap: 10px; }
+        .option-card {
+            border: 2px solid #ccc; padding: 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 15px;
+        }
+        .option-card.selected { border-color: var(--primary); background-color: var(--light); font-weight: bold; }
+        .radio-circle { height: 20px; width: 20px; border-radius: 50%; border: 2px solid #555; }
+        .option-card.selected .radio-circle { background: var(--primary); border-color: var(--primary); }
+
+        /* --- 8. ALERTS & MODALS --- */
+        .scam-warning { background: #fff3e0; border-left: 5px solid #ff9800; padding: 20px; margin: 20px 0; }
+        .safe-banner { background: #e8f5e9; color: #1b5e20; text-align: center; padding: 5px; font-weight: bold; font-size: 16px; border-bottom: 1px solid #c8e6c9;}
+
+    </style>
+</head>
+<body>
+
+    <div id="main-wrapper">
+        
+        <div id="app-container">
+            <div class="safe-banner">SAFE PRACTICE MODE: No Real Money. No Personal Data Sent.</div>
+
+            <div id="screen-setup">
+                <h1>Welcome to Digital Skills Practice</h1>
+                <p>Before we start, please enter your first name so we can personalize the practice apps for you.</p>
+                <label><strong>First Name:</strong></label>
+                <input type="text" id="user-name-input" class="input-large" placeholder="e.g. Elizabeth">
+                <button class="btn-large" style="background-color: var(--action-blue); color: white;" onclick="setupUser()">Start Learning</button>
+            </div>
+
+            <div id="screen-hub" class="hidden">
+                <h1>Home Hub</h1>
+                <p>Hello, <span class="user-name-display"></span>. Which skill would you like to practice today?</p>
+                
+                <div class="portal-grid">
+                    <div class="app-launcher" onclick="launchApp('bank')">
+                        <div style="font-size: 50px;">🏦</div>
+                        <h3>Online Banking</h3>
+                        <p>Check balances, pay bills, and view statements.</p>
+                        <button class="btn-large" style="background-color: var(--action-blue); color: white; font-size: 16px;">Open Bank</button>
+                    </div>
+
+                    <div class="app-launcher" onclick="launchApp('gp')">
+                        <div style="font-size: 50px;">🩺</div>
+                        <h3>GP Surgery</h3>
+                        <p>Book appointments and view your schedule.</p>
+                        <button class="btn-large" style="background-color: var(--action-teal); color: white; font-size: 16px;">Open GP</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="screen-bank" class="hidden bank-theme">
+                <div class="bank-header">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2>SafeBank UK</h2>
+                        <button onclick="exitToHub()" style="background:transparent; border:1px solid white; color:white; padding:5px 10px; border-radius:4px;">Log Out</button>
+                    </div>
+                    <div>Welcome, <span class="user-name-display"></span></div>
+                </div>
+
+                <div class="bank-nav">
+                    <button class="active" onclick="switchBankTab('overview')" id="btn-tab-overview">Overview</button>
+                    <button onclick="switchBankTab('pay')" id="btn-tab-pay">Payments</button>
+                    <button onclick="switchBankTab('transfer')" id="btn-tab-transfer">Transfer</button>
+                    <button onclick="switchBankTab('statements')" id="btn-tab-statements">Statements</button>
+                </div>
+
+                <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
+                    
+                    <div id="bank-tab-overview">
+                        <h3>Your Accounts</h3>
+                        <div class="card" style="border-left: 5px solid var(--primary);">
+                            <div style="font-size:16px; color:#555;">Current Account</div>
+                            <div style="font-size:32px; font-weight:bold;">£<span id="bal-current"></span></div>
+                            <div style="font-size:14px; color:#555; margin-top:5px;">Available to spend</div>
+                        </div>
+
+                        <div class="card" style="border-left: 5px solid #2e7d32;">
+                            <div style="font-size:16px; color:#555;">Savings Pot</div>
+                            <div style="font-size:32px; font-weight:bold;">£<span id="bal-savings"></span></div>
+                            <div style="font-size:14px; color:#555; margin-top:5px;">Interest Rate: 3.5%</div>
+                        </div>
+                    </div>
+
+                    <div id="bank-tab-pay" class="hidden">
+                        <h3>Pay Someone New</h3>
+                        
+                        <div class="scam-warning">
+                            <strong>⚠️ Security Check:</strong><br>
+                            Are you paying this person because someone called you (like 'The Police' or 'Amazon') and told you to?
+                            <br><br>
+                            <em>If yes, hang up. It is a scam.</em>
+                        </div>
+
+                        <label>Payee Name:</label>
+                        <input type="text" class="input-large" placeholder="e.g. John Smith">
+                        
+                        <label>Sort Code (6 digits):</label>
+                        <input type="text" class="input-large" placeholder="12-34-56">
+                        
+                        <label>Account Number (8 digits):</label>
+                        <input type="text" class="input-large" placeholder="12345678">
+
+                        <label>Amount (£):</label>
+                        <input type="number" id="payment-amount" class="input-large" placeholder="0.00">
+
+                        <button class="btn-large" style="background: var(--primary); color: white;" onclick="processPayment()">Confirm Payment</button>
+                    </div>
+
+                    <div id="bank-tab-transfer" class="hidden">
+                        <h3>Move Money Between Accounts</h3>
+                        <p>Move money from your <strong>Current Account</strong> to your <strong>Savings</strong>.</p>
+                        
+                        <label>Amount to Save (£):</label>
+                        <input type="number" id="transfer-amount" class="input-large" placeholder="0.00">
+                        
+                        <button class="btn-large" style="background: #2e7d32; color: white;" onclick="processTransfer()">Transfer to Savings</button>
+                    </div>
+
+                    <div id="bank-tab-statements" class="hidden">
+                        <h3>Recent Transactions</h3>
+                        <div id="transaction-list">
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="screen-gp" class="hidden gp-theme">
+                <div class="gp-header">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2>Oak Tree Surgery</h2>
+                        <button onclick="exitToHub()" style="background:transparent; border:1px solid white; color:white; padding:5px 10px; border-radius:4px;">Exit</button>
+                    </div>
+                </div>
+
+                <div style="padding: 20px;">
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+                        <button class="btn-large" style="width: auto; display: inline-block; font-size: 16px; background:var(--primary); color:white;" onclick="showGpSection('book')">Book New</button>
+                        <button class="btn-large" style="width: auto; display: inline-block; font-size: 16px; background:#ccc; color:black;" onclick="showGpSection('list')">My Appointments</button>
+                    </div>
+
+                    <div id="gp-section-book">
+                        <h3>Book an Appointment</h3>
+                        <p><strong>Step 1:</strong> What is this appointment for?</p>
+                        
+                        <div class="option-card-group">
+                            <div class="option-card" onclick="selectGpType(this, 'General Check-up')">
+                                <div class="radio-circle"></div>
+                                <span>General Check-up (Face to Face)</span>
+                            </div>
+                            <div class="option-card" onclick="selectGpType(this, 'Phone Consultation')">
+                                <div class="radio-circle"></div>
+                                <span>Phone Consultation</span>
+                            </div>
+                            <div class="option-card" onclick="selectGpType(this, 'Flu Jab')">
+                                <div class="radio-circle"></div>
+                                <span>Flu Vaccination</span>
+                            </div>
+                        </div>
+
+                        <br>
+                        <p><strong>Step 2:</strong> When would you like to come?</p>
+                        <input type="date" id="gp-date-input" class="input-large">
+
+                        <button class="btn-large" style="background-color: var(--action-teal); color: white; margin-top: 20px;" onclick="confirmGpBooking()">Confirm Booking</button>
+                    </div>
+
+                    <div id="gp-section-list" class="hidden">
+                        <h3>Upcoming Appointments</h3>
+                        <ul id="appointment-list" style="list-style: none; padding: 0;">
+                            <li style="padding: 20px; background: #eee; border-radius: 8px; text-align: center;">No appointments found.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="guide-panel">
+            <div class="guide-box">
+                <span class="guide-icon">💡</span>
+                <span class="guide-title" id="guide-title">Welcome</span>
+                <p id="guide-text">I am your digital guide. I will explain what to do on each screen here. <br><br>Start by entering your name on the left.</p>
+            </div>
+            
+            <div class="guide-box" style="border-color: #ffd700; background: #fffde7;">
+                <span class="guide-title">Did you know?</span>
+                <p id="guide-tip">You can't break anything here. If you get stuck, just refresh the page (press F5) to start over.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA STORE ---
+        let state = {
+            name: "Friend",
+            currentBalance: 1450.00,
+            savingsBalance: 5000.00,
+            transactions: [
+                { date: "Yesterday", desc: "Supermarket", amount: -45.50 },
+                { date: "2 days ago", desc: "Pension Credit", amount: 185.00 }
+            ],
+            appointments: []
+        };
+
+        // --- NAVIGATION & GUIDE SYSTEM ---
+        
+        // This function updates the "Teacher" sidebar text based on where the user is
+        function updateGuide(viewId) {
+            const title = document.getElementById('guide-title');
+            const text = document.getElementById('guide-text');
+            const tip = document.getElementById('guide-tip');
+
+            if(viewId === 'setup') {
+                title.innerText = "Getting Started";
+                text.innerText = "Type your name in the box. This helps make the banking simulation feel more like a real account.";
+                tip.innerText = "On real websites, never tap inside a box unless you know what it is for.";
+            }
+            else if(viewId === 'hub') {
+                title.innerText = "The Menu";
+                text.innerText = "This is your 'Home Screen'. From here, you can launch different apps. Try clicking 'Online Banking' first.";
+                tip.innerText = "Apps usually have icons (pictures) to help you recognize them quickly.";
+            }
+            else if(viewId === 'bank-overview') {
+                title.innerText = "Your Accounts";
+                text.innerText = "This screen shows how much money you have. 'Current' is for daily spending. 'Savings' is for keeping safe.";
+                tip.innerText = "Your balance updates instantly when you spend or receive money.";
+            }
+            else if(viewId === 'bank-pay') {
+                title.innerText = "Making a Payment";
+                text.innerText = "To pay a bill or a friend, you need their Name, Sort Code, and Account Number. Be very careful with these numbers!";
+                tip.innerText = "Scammers often try to rush you. Real banks will never rush you to move money.";
+            }
+            else if(viewId === 'bank-transfer') {
+                title.innerText = "Moving Money";
+                text.innerText = "This lets you move money from your spending account to your savings account.";
+                tip.innerText = "Moving money between your own accounts happens instantly.";
+            }
+            else if(viewId === 'gp-book') {
+                title.innerText = "Booking Online";
+                text.innerText = "Instead of calling at 8am, you can select what you need here. Tap one of the white boxes to select the appointment type.";
+                tip.innerText = "Online booking systems are available 24 hours a day.";
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+
+        function setupUser() {
+            const input = document.getElementById('user-name-input').value;
+            if(input.trim() !== "") {
+                state.name = input;
+                
+                // Update all name placeholders
+                document.querySelectorAll('.user-name-display').forEach(span => {
+                    span.innerText = state.name;
+                });
+
+                document.getElementById('screen-setup').classList.add('hidden');
+                document.getElementById('screen-hub').classList.remove('hidden');
+                updateGuide('hub');
+            } else {
+                alert("Please simply type your first name.");
+            }
+        }
+
+        function launchApp(app) {
+            document.getElementById('screen-hub').classList.add('hidden');
+            
+            if(app === 'bank') {
+                document.getElementById('screen-bank').classList.remove('hidden');
+                updateBankUI();
+                updateGuide('bank-overview');
+            } else if (app === 'gp') {
+                document.getElementById('screen-gp').classList.remove('hidden');
+                updateGuide('gp-book');
+            }
+        }
+
+        function exitToHub() {
+            document.querySelectorAll('#app-container > div').forEach(div => div.classList.add('hidden'));
+            document.querySelector('.safe-banner').classList.remove('hidden'); // keep banner
+            document.getElementById('screen-hub').classList.remove('hidden');
+            updateGuide('hub');
+        }
+
+        // --- BANK LOGIC ---
+
+        function updateBankUI() {
+            document.getElementById('bal-current').innerText = state.currentBalance.toFixed(2);
+            document.getElementById('bal-savings').innerText = state.savingsBalance.toFixed(2);
+            
+            // Render transactions
+            const list = document.getElementById('transaction-list');
+            list.innerHTML = "";
+            state.transactions.forEach(t => {
+                const row = document.createElement('div');
+                row.className = "acct-row";
+                const colorClass = t.amount < 0 ? "amount-neg" : "amount-pos";
+                row.innerHTML = `
+                    <div>
+                        <strong>${t.desc}</strong><br>
+                        <span style="font-size:14px; color:#666;">${t.date}</span>
+                    </div>
+                    <div class="${colorClass}">${t.amount < 0 ? '' : '+'}£${Math.abs(t.amount).toFixed(2)}</div>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        function switchBankTab(tabName) {
+            // Hide all tabs
+            document.getElementById('bank-tab-overview').classList.add('hidden');
+            document.getElementById('bank-tab-pay').classList.add('hidden');
+            document.getElementById('bank-tab-transfer').classList.add('hidden');
+            document.getElementById('bank-tab-statements').classList.add('hidden');
+
+            // Deactivate buttons
+            document.querySelectorAll('.bank-nav button').forEach(b => b.classList.remove('active'));
+
+            // Show selected
+            document.getElementById('btn-tab-' + tabName).classList.add('active');
+            document.getElementById('bank-tab-' + tabName).classList.remove('hidden');
+
+            // Update Guide
+            if(tabName === 'overview') updateGuide('bank-overview');
+            if(tabName === 'pay') updateGuide('bank-pay');
+            if(tabName === 'transfer') updateGuide('bank-transfer');
+        }
+
+        function processPayment() {
+            const amt = parseFloat(document.getElementById('payment-amount').value);
+            if(!amt || amt <= 0) { alert("Please enter a valid amount."); return; }
+            if(amt > state.currentBalance) { alert("You don't have enough money in your Current Account."); return; }
+
+            if(confirm(`Are you sure you want to send £${amt.toFixed(2)}? (Remember, this is fake practice money)`)) {
+                state.currentBalance -= amt;
+                state.transactions.unshift({ date: "Just now", desc: "Online Payment", amount: -amt });
+                alert("Payment Successful!");
+                document.getElementById('payment-amount').value = ""; // Clear input
+                switchBankTab('overview');
+                updateBankUI();
+            }
+        }
+
+        function processTransfer() {
+            const amt = parseFloat(document.getElementById('transfer-amount').value);
+            if(!amt || amt <= 0) { alert("Please enter a valid amount."); return; }
+            if(amt > state.currentBalance) { alert("Insufficient funds."); return; }
+
+            state.currentBalance -= amt;
+            state.savingsBalance += amt;
+            state.transactions.unshift({ date: "Just now", desc: "Transfer to Savings", amount: -amt });
+            
+            alert("Transfer Complete! You have moved money to your savings.");
+            document.getElementById('transfer-amount').value = "";
+            switchBankTab('overview');
+            updateBankUI();
+        }
+
+        // --- GP LOGIC ---
+
+        let selectedGpType = "";
+
+        function showGpSection(section) {
+            document.getElementById('gp-section-book').classList.add('hidden');
+            document.getElementById('gp-section-list').classList.add('hidden');
+            
+            if(section === 'book') {
+                document.getElementById('gp-section-book').classList.remove('hidden');
+                updateGuide('gp-book');
+            } else {
+                document.getElementById('gp-section-list').classList.remove('hidden');
+                renderAppointments();
+            }
+        }
+
+        function selectGpType(element, type) {
+            // Visual selection
+            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedGpType = type;
+        }
+
+        function confirmGpBooking() {
+            const date = document.getElementById('gp-date-input').value;
+            if(!selectedGpType) { alert("Please click one of the appointment types first."); return; }
+            if(!date) { alert("Please select a date."); return; }
+
+            // Save appointment
+            state.appointments.push({ type: selectedGpType, date: date });
+            
+            alert(`Appointment Booked: ${selectedGpType} on ${date}. \n\nYou can view this in 'My Appointments'.`);
+            
+            // Reset form
+            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            selectedGpType = "";
+            document.getElementById('gp-date-input').value = "";
+            
+            showGpSection('list');
+        }
+
+        function renderAppointments() {
+            const list = document.getElementById('appointment-list');
+            list.innerHTML = "";
+            if(state.appointments.length === 0) {
+                list.innerHTML = "<li style='padding:20px; background:#eee;'>No appointments found.</li>";
+                return;
+            }
+
+            state.appointments.forEach(app => {
+                const li = document.createElement('li');
+                li.className = "card"; // Reuse card style
+                li.style.borderColor = "var(--action-teal)";
+                li.innerHTML = `<strong>${app.type}</strong><br>Date: ${new Date(app.date).toLocaleDateString()}`;
+                list.appendChild(li);
+            });
+        }
+
+        // Initialize guide
+        updateGuide('setup');
+
+    </script>
+</body>
+</html>
